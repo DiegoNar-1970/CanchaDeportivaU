@@ -107,7 +107,7 @@ const Reservar = () => {
         >
           🧾 Continuar
         </button>
-
+      </form>
         {popPap && (
           <PopPap
             dataCReserva={dataCReserva}
@@ -115,7 +115,6 @@ const Reservar = () => {
             component={OptionsReserva}
           />
         )}
-      </form>
     </div>
     </div>
     

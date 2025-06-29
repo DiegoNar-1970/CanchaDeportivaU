@@ -20,7 +20,7 @@ const User = () => {
   // }
   
   return (
-    <div className="min-h-screen bg-white h-full w-full p-2 gap-4 flex flex-col">
+    <div className="min-h-screen bg-white h-full w-full p-2 gap-4 flex flex-col py-7 px-7">
       <NavBarUser />
       <CanchaList />
     </div>

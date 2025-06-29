@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { ReservaService } from '../../Services/reservarService';
+
 import { useNavigate } from 'react-router-dom';
 import { PDFDownloadLink } from '@react-pdf/renderer';
 import FacturaPdf from '../FacturaPdf';
 import { GlobalContext } from '../../Context/State';
+import { ReservaService } from '../../Services/Reservas/reservarService';
 
 const OptionsReserva = ({data}) => {
 
