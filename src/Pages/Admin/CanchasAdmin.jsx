@@ -1,93 +1,88 @@
-import React, { useState } from 'react';
-import moment from 'moment';
+import React, { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import axios from "axios";
 
-const CanchasAdmin   = () => {
-  const [reservas, setReservas] = useState([
-    {
-      id: 1,
-      nombre: 'Diego',
-      cancha: 'Cancha de Fútbol A',
-      tipo: 'Fútbol',
-      fecha: '2025-06-28',
-      hora_inicio: '08:00:00',
-      hora_fin: '09:00:00',
-      costo_total: 12000,
-      img: 'https://i0.wp.com/www.construcanchas.com/wp-content/uploads/2021/03/fondo-3.jpg?w=1280&ssl=1  ',
-    },
-    {
-      id: 2,
-      nombre: 'Diego',
-      cancha: 'Cancha de Busquet',
-      tipo: 'Fútbol',
-      fecha: '2025-06-25',
-      hora_inicio: '09:00:00',
-      hora_fin: '10:00:00',
-      costo_total: 50000,
-      img: 'https://phantom-marca-mx.unidadeditorial.es/651127d047ae3ecec86bfcf244f406a9/resize/828/f/jpg/mx/assets/multimedia/imagenes/2023/09/26/16957642774417.jpg	',
-    },
-    {
-      id: 3,
-      nombre: 'Diego',
-      cancha: 'Cancha de  tennis',
-      tipo: 'Fútbol',
-      fecha: '2025-06-07',
-      hora_inicio: '13:00:00',
-      hora_fin: '14:00:00',
-      costo_total: 50000,
-      img: 'https://bogota.gov.co/sites/default/files/styles/1050px/public/2024-06/canchas-de-tenis-en-bogota_-reserva-gratis-en-los-parques-de-la-ciudad.png',
-    },
-    {
-      id: 4,
-      nombre: 'Diego',
-      cancha: 'Cancha de  Futbol B',
-      tipo: 'Fútbol',
-      fecha: '2025-06-07',
-      hora_inicio: '13:00:00',
-      hora_fin: '14:00:00',
-      costo_total: 50000,
-      img: 'https://img.olympics.com/images/image/private/t_s_16_9_g_auto/t_s_w1460/f_auto/primary/tarhmadzucbnqb8wzhsg',
-    },
+const API_URL = "http://localhost:8080/cancha";
 
-  ]);
+const CanchasAdmin = () => {
+  const [canchas, setCanchas] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingCancha, setEditingCancha] = useState(null);
 
-  const [form, setForm] = useState({ nombre: '', fecha: '', hora_inicio: '', hora_fin: '', costo_total: '' });
-  const [editId, setEditId] = useState(null);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm();
 
-  const handleDelete = (id) => {
-    setReservas(reservas.filter((r) => r.id !== id));
-  };
+  useEffect(() => {
+    fetchCanchas();
+  }, []);
 
-  const handleEdit = (reserva) => {
-    setForm(reserva);
-    setEditId(reserva.id);
-  };
-
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = () => {
-    if (editId) {
-      setReservas(reservas.map((r) => (r.id === editId ? { ...form, id: editId, img: r.img } : r)));
-      setEditId(null);
-    } else {
-      const newId = reservas.length ? Math.max(...reservas.map((r) => r.id)) + 1 : 1;
-      setReservas([...reservas, { ...form, id: newId, nombre: 'Diego', cancha: 'Cancha de Fútbol A', tipo: 'Fútbol', img: 'https://cdn-icons-png.flaticon.com/512/854/854894.png' }]);
+  const fetchCanchas = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/get-all`);
+      setCanchas(res.data);
+    } catch (err) {
+      console.error("Error al obtener canchas", err);
     }
-    setForm({ nombre: '', fecha: '', hora_inicio: '', hora_fin: '', costo_total: '' });
   };
 
-  const totalPagos = reservas.reduce((acc, r) => acc + Number(r.costo_total), 0);
+  const onSubmit = async (data) => {
+    try {
+      if (editingCancha) {
+        await axios.put(`${API_URL}/${editingCancha.id_cancha}`, data);
+      } else {
+        await axios.post(`${API_URL}/create`, data);
+      }
+      fetchCanchas();
+      closeModal();
+    } catch (error) {
+      console.error("Error al guardar cancha", error);
+    }
+  };
+
+  const openModal = (cancha = null) => {
+    setModalOpen(true);
+    setEditingCancha(cancha);
+    if (cancha) {
+      setValue("nombre_cancha", cancha.nombre_cancha);
+      setValue("tipo", cancha.tipo);
+      setValue("precio_hora", cancha.precio_hora);
+      setValue("estado", cancha.estado);
+      setValue("img", cancha.img);
+    } else {
+      reset();
+    }
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditingCancha(null);
+    reset();
+  };
+
+  const deleteCancha = async (id) => {
+    if (!window.confirm("¿Estás seguro de eliminar esta cancha?")) return;
+    try {
+      await axios.delete(`${API_URL}/${id}`);
+      fetchCanchas();
+    } catch (error) {
+      console.error("Error al eliminar cancha", error);
+    }
+  };
 
   return (
-    <div className="p-6 bg-white rounded-[20px] shadow-md py-7 px-7 font-sans">
-      <div className="mb-6">
-        <input className="border p-2 mr-2 rounded" name="fecha" type="date" value={form.fecha} onChange={handleChange} placeholder="Fecha" />
-        <input className="border p-2 mr-2 rounded" name="hora_inicio" value={form.hora_inicio} onChange={handleChange} placeholder="Hora inicio (08:00:00)" />
-        <input className="border p-2 mr-2 rounded" name="hora_fin" value={form.hora_fin} onChange={handleChange} placeholder="Hora fin (09:00:00)" />
-        <input className="border p-2 mr-2 rounded" name="costo_total" type="number" value={form.costo_total} onChange={handleChange} placeholder="Costo" />
-        <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={handleSubmit}>
-          {editId ? 'Actualizar' : 'Crear'} Reserva
+    <div className="p-6 bg-white rounded-[20px] shadow-md py-7 px-7">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-xl font-bold">Gestión de Canchas</h2>
+        <button
+          onClick={() => openModal()}
+          className="bg-blue-500 text-white px-4 py-2 rounded-[20px] hover:bg-blue-600 transition-colors"
+        >
+          Crear Cancha
         </button>
       </div>
 
@@ -95,34 +90,44 @@ const CanchasAdmin   = () => {
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cancha</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hora Inicio</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hora Fin</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Costo</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Imagen</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acciones</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio/Hora</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Imagen</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {reservas.map((reserva) => (
-              <tr key={reserva.id}>
-                <td className="px-6 py-4 text-sm text-gray-900">{reserva.nombre}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{reserva.cancha}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{reserva.tipo}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{moment(reserva.fecha).format('DD/MM/YYYY')}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{reserva.hora_inicio}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">{reserva.hora_fin}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">${Number(reserva.costo_total).toLocaleString('es-CO')}</td>
-                <td className="px-6 py-4 text-sm text-gray-500">
-                  <img src={reserva.img} alt="User" className="w-10 h-10 rounded-full" />
+            {canchas.map((cancha) => (
+              <tr key={cancha.id_cancha}>
+                <td className="px-6 py-4 text-sm text-gray-900">{cancha.id_cancha}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{cancha.nombre_cancha}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">{cancha.tipo}</td>
+                <td className="px-6 py-4 text-sm text-gray-500">${cancha.precio_hora}</td>
+                <td className="px-6 py-4 text-sm">
+                  <span className="bg-gray-200 text-gray-700 px-3 py-1 rounded-full text-xs">
+                    {cancha.estado}
+                  </span>
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-500">
-                  <div className="flex gap-2">
-                    <button className="text-red-500" onClick={() => handleDelete(reserva.id)}>Eliminar</button>
-                    <button className="text-blue-500" onClick={() => handleEdit(reserva)}>Actualizar</button>
+                <td className="px-6 py-4 text-sm">
+                  <img src={cancha.img} alt="cancha" className="w-10 h-10 rounded-full object-cover" />
+                </td>
+                <td className="px-6 py-4 text-sm">
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => openModal(cancha)}
+                      className="text-blue-500 hover:underline text-sm font-medium"
+                    >
+                      Editar
+                    </button>
+                    <button
+                      onClick={() => deleteCancha(cancha.id_cancha)}
+                      className="text-red-500 hover:underline text-sm font-medium"
+                    >
+                      Eliminar
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -130,6 +135,73 @@ const CanchasAdmin   = () => {
           </tbody>
         </table>
       </div>
+
+      {modalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-[20px] shadow-md w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">
+              {editingCancha ? "Editar Cancha" : "Crear Cancha"}
+            </h3>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div>
+                <label className="block font-medium">Nombre:</label>
+                <input
+                  {...register("nombre_cancha", { required: true })}
+                  className="w-full border border-gray-300 rounded-[10px] px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block font-medium">Tipo:</label>
+                <input
+                  {...register("tipo", { required: true })}
+                  className="w-full border border-gray-300 rounded-[10px] px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block font-medium">Precio/Hora:</label>
+                <input
+                  type="number"
+                  {...register("precio_hora", { required: true })}
+                  className="w-full border border-gray-300 rounded-[10px] px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block font-medium">Estado:</label>
+                <select
+                  {...register("estado", { required: true })}
+                  className="w-full border border-gray-300 rounded-[10px] px-3 py-2"
+                >
+                  <option value="Disponible">Disponible</option>
+                  <option value="Ocupada">Ocupada</option>
+                  <option value="Mantenimiento">Mantenimiento</option>
+                </select>
+              </div>
+              <div>
+                <label className="block font-medium">Imagen (URL):</label>
+                <input
+                  {...register("img", { required: true })}
+                  className="w-full border border-gray-300 rounded-[10px] px-3 py-2"
+                />
+              </div>
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="px-4 py-2 bg-gray-200 rounded-[20px] hover:bg-gray-300 transition"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-[20px] hover:bg-blue-600 transition"
+                >
+                  {editingCancha ? "Actualizar" : "Crear"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -16,7 +16,7 @@ export const UserService = {
 
     getAllUsers: async () => {
         try {
-            const response = await axios.get(API_URL);
+            const response = await axios.get(`${API_URL}/get-all`);
             return response.data;
         } catch (error) {
             console.error("Error fetching users:", error);

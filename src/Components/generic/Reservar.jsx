@@ -39,6 +39,7 @@ const Reservar = () => {
   const generateReserva = (data) => {
     setPopPap(true);
     setDataCReserva(data);
+    console.log('esta es la data',data)
     console.log(data, 'Datos de reserva');
   };
 
@@ -110,7 +111,7 @@ const Reservar = () => {
       </form>
         {popPap && (
           <PopPap
-            dataCReserva={dataCReserva}
+            data={dataCReserva}
             onClose={onClosePopPap}
             component={OptionsReserva}
           />

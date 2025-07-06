@@ -27,18 +27,23 @@ const Login = () => {
   const onSubmit = async (data) => {
     setError(null); 
     if(isLogin) {
+
       const userLogin = await UserService.getUserByEmail(data);
       console.log('este error llego aca',userLogin);
+      
       if (userLogin.response?.data?.status === 'error') {
         setError(userLogin.response?.data?.message);
         return;
       }
+
       const navigateTo = userLogin.user?.rol;
       setUser(userLogin.user);
       setRol(userLogin.user.rol);
       console.log('este error llego aca',userLogin.user.rol);
-      navigate(`/${navigateTo}`); // Redirigir al inicio después del submit
+      navigate(`/${navigateTo}`);
+      
     }
+
     else {
       let newData = { 
         rol:'user',
